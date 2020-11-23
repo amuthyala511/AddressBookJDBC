@@ -119,4 +119,18 @@ public class AddressBookDBService {
 		}
 		return addressBookList;
 	}
+	
+	public int readDataFromAddressBook(String count, String city) throws AddressBookException {
+		int noOfContacts = 0;
+		String query = String.format("select %s(state) from addressbook where city = '%s' group by city;", count, city);
+		try (Connection connection = this.getConnection()) {
+			Statement statement = connection.createStatement();
+			ResultSet rs = statement.executeQuery(query);
+			rs.next();
+			noOfContacts = rs.getInt(1);
+		} catch (SQLException e) {
+			throw new AddressBookException(e.getMessage(), AddressBookException.ExceptionType.DatabaseException);
+		}
+		return noOfContacts;
+	}
 }

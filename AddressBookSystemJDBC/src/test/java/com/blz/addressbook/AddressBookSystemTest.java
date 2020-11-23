@@ -35,4 +35,9 @@ public class AddressBookSystemTest {
 		List<Person> list = addressBookService.readAddressBookData(IOService.DB_IO, "2020-11-01", "2020-11-22");
 		Assert.assertEquals(2, list.size());
 	}
+	
+	@Test
+	public void givenAddressBookDetails_WhenRetrieved_ShouldReturnTotalNumberOfContacts() throws AddressBookException {
+		Assert.assertEquals(1, addressBookService.readAddressBookData("Count", "KNR"));
+	}
 }
