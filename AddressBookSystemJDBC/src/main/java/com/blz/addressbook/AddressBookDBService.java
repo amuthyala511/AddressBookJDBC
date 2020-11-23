@@ -133,4 +133,25 @@ public class AddressBookDBService {
 		}
 		return noOfContacts;
 	}
+	
+	public Person addNewContact(String firstName, String lastName, String address, String city, String state, String zip, String phno, String emailId) throws AddressBookException {
+		int personId = -1;
+		Person personData = null;
+		String query = String.format("insert into addressbook(FirstName, LastName, Address, City, State, Zip, PhoneNumber, Email) values"
+				+ "('%s', '%s', '%s', '%s', '%s','%s', '%s', '%s')",
+				firstName, lastName, address, city, state, zip, phno, emailId);
+		try (Connection connection = this.getConnection()) {
+			Statement statement = connection.createStatement();
+			int rowAffected = statement.executeUpdate(query, statement.RETURN_GENERATED_KEYS);
+			if (rowAffected == 1) {
+				ResultSet resultSet = statement.getGeneratedKeys();
+				if (resultSet.next())
+					personId = resultSet.getInt(1);
+			}
+			personData = new Person(firstName, lastName, address, city, state, zip, phno, emailId);
+		} catch (SQLException e) {
+			throw new AddressBookException(e.getMessage(), AddressBookException.ExceptionType.DatabaseException);
+		}
+		return personData;
+	}
 }

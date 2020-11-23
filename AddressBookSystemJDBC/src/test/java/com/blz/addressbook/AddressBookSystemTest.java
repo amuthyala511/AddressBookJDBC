@@ -40,4 +40,12 @@ public class AddressBookSystemTest {
 	public void givenAddressBookDetails_WhenRetrieved_ShouldReturnTotalNumberOfContacts() throws AddressBookException {
 		Assert.assertEquals(1, addressBookService.readAddressBookData("Count", "KNR"));
 	}
+	
+	@Test
+	public void givenAddressBookDetails_WhenaddedNewcontact_ShouldSyncWithDB() throws AddressBookException {
+		addressBookService.readAddressBookData(IOService.DB_IO);
+		addressBookService.addNewContact("Manu", "Reddy", "Uppal", "HYD", "TG", "500039", "9581440858", "manu@gmail.com");
+		boolean result = addressBookService.checkUpdatedRecordSyncWithDatabase("Manu");
+		Assert.assertEquals(true, result);
+	}
 }
