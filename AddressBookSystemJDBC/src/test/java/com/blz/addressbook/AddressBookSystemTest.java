@@ -1,5 +1,8 @@
 package com.blz.addressbook;
 
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -47,5 +50,19 @@ public class AddressBookSystemTest {
 		addressBookService.addNewContact("Manu", "Reddy", "Uppal", "HYD", "TG", "500039", "9581440858", "manu@gmail.com");
 		boolean result = addressBookService.checkUpdatedRecordSyncWithDatabase("Manu");
 		Assert.assertEquals(true, result);
+	}
+	
+	@Test
+	public void givenPersons_WhenAddedToDBUsingThread_ShouldMatchNumOfEntries() throws AddressBookException {
+		Person[] arrayOfContacts = {
+				new Person("Avi", "Shyam", "Hitech", "HYD", "TG", "500012", "6032806811", "avi@gmail.com"),
+				new Person("Anu", "Radha", "Rampur", "KNR", "TG", "505001", "9234180756", "anu@gmail.com")
+		};
+		addressBookService.readAddressBookData(IOService.DB_IO);
+		Instant start = Instant.now();
+		addressBookService.addMultipleContacts(Arrays.asList(arrayOfContacts));
+		Instant end = Instant.now();
+		System.out.println("Duration with thread: "+Duration.between(start, end));
+		Assert.assertEquals(3, addressBookService.countEntries(IOService.DB_IO));
 	}
 }
