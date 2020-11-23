@@ -29,4 +29,10 @@ public class AddressBookSystemTest {
 		boolean result = addressBookService.checkUpdatedRecordSyncWithDatabase("Sana");
 		Assert.assertEquals(true, result);
 	}
+	
+	@Test
+	public void givenAddressBookDetails_WhenRetrieved_ForGivenRange_ShouldMatchPersonsCount() throws AddressBookException {
+		List<Person> list = addressBookService.readAddressBookData(IOService.DB_IO, "2020-11-01", "2020-11-22");
+		Assert.assertEquals(2, list.size());
+	}
 }
