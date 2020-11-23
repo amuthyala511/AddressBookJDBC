@@ -1,9 +1,23 @@
 package com.blz.addressbook;
 
+import java.io.*;
+import java.nio.file.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+
+import com.google.gson.Gson;
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 
 public class AddressBook {
 	// UC1
@@ -40,7 +54,7 @@ public class AddressBook {
 		} else {
 			person = new Person(firstName, lastName, address, city, state, zip, phno, emailId);
 			list.add(person);
-			addDataToFile(addressBookName);
+			addDataToFile(firstName, lastName, address, city, state, phno, zip, emailId, addressBookName);
 			try {
 				addDataToCSVFile(addressBookName);
 			} catch (IOException e) {
@@ -61,7 +75,6 @@ public class AddressBook {
 			for (int i = 0; i < list.size(); i++) {
 				if (list.get(i).getFirstName().equals(fname)) {
 					System.out.println(list.get(i));
-					@SuppressWarnings("resource")
 					System.out.println("Enter your choice to edit....\n1. FirstName\n2. LastName\n3. Address\n4. City\n5. State\n6. Zipcode\n7. PhoneNumber\n8. Email\n");
 					int choice = sc.nextInt();
 					switch (choice) {
@@ -136,7 +149,7 @@ public class AddressBook {
 	}
 
 	// UC5
-	public void addPerson() {
+	public void addPerson(String addressBookName) {
 			System.out.println("Enter number of new persons to be added: ");
 			int noOfPersons = sc.nextInt();
 			int count = 1;
@@ -150,144 +163,186 @@ public class AddressBook {
 	public void searchByCity() {
 			System.out.println("Enter city name: ");
 			String City = sc.next();
-			list.stream().filter(n -> n.getCity().equals(City)).forEach(i -> System.out.println("Details found: "+i.getFirstName()));
+			list.stream().filter(n -> n.getCity().equals(City))
+							.forEach(i -> System.out.println("Details found: "+i.getFirstName()));
 		}
 		
-		//UC9
-		public void viewByCity() {
-			System.out.println("Enter city name: ");
-			String City = sc.next();
-			list.stream().filter(n -> n.getCity().equals(City)).forEach(i -> System.out.println(i));
+	//UC9
+	public void viewByCity() {
+		System.out.println("Enter city name: ");
+		String City = sc.next();
+		list.stream().filter(n -> n.getCity().equals(City)).forEach(i -> System.out.println(i));
 		}
 		
-		//UC10
-		public void countBasedOnCity() {
-			int count = 0;
-			System.out.println("Enter city name: ");
-			String City = sc.next();
-			count = (int) list.stream().filter(n -> n.getCity().equals(City)).count();
-			System.out.println(count);
+	//UC10
+	public void countBasedOnCity() {
+		int count = 0;
+		System.out.println("Enter city name: ");
+		String City = sc.next();
+		count = (int) list.stream().filter(n -> n.getCity().equals(City)).count();
+		System.out.println(count);
 		}
 		
-		//UC11
-		public void sortingByName() {
-			list = list.stream().sorted(Comparator.comparing(Person::getFirstName)).collect(Collectors.toList());
-			list.forEach(i -> System.out.println(i));
+	//UC11
+	public void sortingByName() {
+		list = list.stream().sorted(Comparator.comparing(Person::getFirstName)).collect(Collectors.toList());
+		list.forEach(i -> System.out.println(i));
 		}
 		
-		//UC12
-		public void sortingByCity() {
-			list = list.stream().sorted(Comparator.comparing(Person::getCity)).collect(Collectors.toList());
-			list.forEach(i -> System.out.println(i));
+	//UC12
+	public void sortingByCity() {
+		list = list.stream().sorted(Comparator.comparing(Person::getCity)).collect(Collectors.toList());
+		list.forEach(i -> System.out.println(i));
 		}
 		
-		public void addDataToFile(String addressBookName) {
-			System.out.println("Enter name of text file to write data: ");
-			String fileName = sc.next();
-			File file = new File("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".txt");
-			if(!file.exists()) {
-				try {
-					file.createNewFile();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
+	public void addDataToFile(String firstName, String lastName, String address, String city, String state, String phno, String zip, String emailId, String addressBookName) {
+		System.out.println("Enter name of text file to write data: ");
+		String fileName = sc.next();
+		File file = new File("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".txt");
+		if(!file.exists()) {
 			try {
-				FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
-				BufferedWriter bw = new BufferedWriter(fw);
-				List<String[]> stringData = new ArrayList<>();
-				for(Person detail : list) {
-					stringData.add(new String[] { "Person: "+" \n1. FirstName: "+firstName+" \n2. LastName: "+lastName+"\n3. Address: "+address
-						+"\n4. City: "+city+"\n5. State: "+state+"\n6. Zip: "+zip+"\n7. PhoneNumber: "+phno
-						+"\n 8. Email: "+emailId+"\n" });
-					bw.writeAll(stringData);
-					bw.close();
+				file.createNewFile();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}
-		
-		public void readDataFromFile() {
-			System.out.println("Enter Address Book Name: ");
-			String fileName = sc.next();
-			Path filePath = Paths.get("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".txt");
-			try {
-				Files.lines(filePath).map(line -> line.trim()).forEach(line -> System.out.println(line));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+		try {
+			FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+			BufferedWriter bw = new BufferedWriter(fw);
+			bw.write("Person: "+" \n1. FirstName: "+firstName+" \n2. LastName: "+lastName+"\n3. Address: "+address
+					+"\n4. City: "+city+"\n5. State: "+state+"\n6. Zip: "+zip+"\n7. PhoneNumber: "+phno
+					+"\n 8. Email: "+emailId+"\n");
+				bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+	}
 		
-		public void addDataToCSVFile(String addressBookName) throws IOException {
-			System.out.println("Enter name of CSV file to write data: ");
-			String fileName = sc.next();
-			Path filePath = Paths.get("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".csv");
-			if(Files.notExists(filePath))
-				Files.createFile(filePath);
-			File file = new File(String.valueOf(filePath));
-			try {
-				FileWriter fw = new FileWriter(file, true);
-				CSVWriter writer = new CSVWriter(fw);
-				List<String[]> data = new ArrayList<>();
-				for(Person details : list) {
-					data.add(new String[] { "Person: "+"\n1. FirstName: "+details.firstName+"\n2. LastName: "
-							+details.lastName+"\n3. Address: "+details.address+"\n4. City: "+details.city+"\n5. State: "
-							+details.state+"\n6. Zip: "+details.zip+"\n7. PhoneNumber: "+details.phno+"\n8. Email: "+details.emailId+"\n"
-					});
-				}
-				writer.writeAll(data);
-				writer.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+	public void readDataFromFile() {
+		System.out.println("Enter Address Book Name: ");
+		String fileName = sc.next();
+		Path filePath = Paths.get("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".txt");
+		try {
+			Files.lines(filePath).map(line -> line.trim()).forEach(line -> System.out.println(line));
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+	}
 		
-		public void readDataFromCSVFile() {
-			System.out.println("Enter Address Book Name: ");
-			String fileName = sc.next();
-			CSVreader reader = null;
-			try {
-				reader = new CSVReader(new FileReader("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".csv"));
-				String[] nextLine;
-				while((nextLine = reader.readNext() != null)) {
-					for(String next : nextLine) {
-						System.out.println(next);
-					}
-					System.out.println();
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
+	public void addDataToCSVFile(String addressBookName) throws IOException {
+		System.out.println("Enter name of CSV file to write data: ");
+		String fileName = sc.next();
+		Path filePath = Paths.get("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".csv");
+		if(Files.notExists(filePath))
+			Files.createFile(filePath);
+		File file = new File(String.valueOf(filePath));
+		try {
+			FileWriter fw = new FileWriter(file, true);
+			CSVWriter writer = new CSVWriter(fw);
+			List<String[]> data = new ArrayList<>();
+			for(Person details : list) {
+				data.add(new String[] { "Person: "+"\n1. FirstName: "+details.firstName+"\n2. LastName: "
+						+details.lastName+"\n3. Address: "+details.address+"\n4. City: "+details.city+"\n5. State: "
+						+details.state+"\n6. Zip: "+details.zip+"\n7. PhoneNumber: "+details.phno+"\n8. Email: "+details.emailId+"\n"
+				});
 			}
-		}
-		
-		public void addDataToJSONFile(String addressBookName) throws IOException {
-			System.out.println("Enter name for json written file : ");
-			String fileName = sc.nextLine();
-			Path filePath = Paths.get("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".json");
-			Gson gson = new Gson();
-			String json = gson.toJson(lst);
-			FileWriter writer = new FileWriter(String.valueOf(filePath));
-			writer.write(json);
+			writer.writeAll(data);
 			writer.close();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
-
-		public void readDataFromJSONFile() throws FileNotFoundException {
-			System.out.println("Enter address book name : ");
-			String fileName = sc.nextLine();
-			Path filePath = Paths.get("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".json");
-			Gson gson = new Gson();
-			BufferedReader br = new BufferedReader(new FileReader(String.valueOf(filePath)));
-			Person[] data = gson.fromJson(br, Person[].class);
-			List<Person> lst = Arrays.asList(data);
-			for (Person details : lst) {
-				System.out.println("Firstname : " + details.firstName);
-				System.out.println("Lastname : " + details.lastName);
-				System.out.println("Address : " + details.address);
-				System.out.println("City : " + details.city);
-				System.out.println("State : " + details.state);
-				System.out.println("Zip : " + details.zip);
-				System.out.println("PhoneNumber : " + details.phno);
-				System.out.println("Email : " + details.emailId);
+	}
+		
+	public void readDataFromCSVFile() {
+		System.out.println("Enter Address Book Name: ");
+		String fileName = sc.next();
+		CSVReader reader = null;
+		try {
+			reader = new CSVReader(new FileReader("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".csv"));
+			String[] nextLine;
+			while((nextLine = reader.readNext()) != null) {
+				for(String next : nextLine) {
+					System.out.println(next);
+				}
+				System.out.println();
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+	}
+		
+	public void addDataToJSONFile(String addressBookName) throws IOException {
+		System.out.println("Enter name for json written file : ");
+		String fileName = sc.nextLine();
+		Path filePath = Paths.get("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".json");
+		Gson gson = new Gson();
+		String json = gson.toJson(list);
+		FileWriter writer = new FileWriter(String.valueOf(filePath));
+		writer.write(json);
+		writer.close();
+	}
+
+	public void readDataFromJSONFile() throws FileNotFoundException {
+		System.out.println("Enter address book name : ");
+		String fileName = sc.nextLine();
+		Path filePath = Paths.get("C:\\Users\\Muthyala Aishwarya\\git\\AddressBookData"+fileName+".json");
+		Gson gson = new Gson();
+		BufferedReader br = new BufferedReader(new FileReader(String.valueOf(filePath)));
+		Person[] data = gson.fromJson(br, Person[].class);
+		List<Person> list = Arrays.asList(data);
+		for (Person details : list) {
+			System.out.println("Firstname : " + details.firstName);
+			System.out.println("Lastname : " + details.lastName);
+			System.out.println("Address : " + details.address);
+			System.out.println("City : " + details.city);
+			System.out.println("State : " + details.state);
+			System.out.println("Zip : " + details.zip);
+			System.out.println("PhoneNumber : " + details.phno);
+			System.out.println("Email : " + details.emailId);
+		}
+	}
+	
+	private Connection getConnection() throws SQLException {
+		String jdbcURL = "jdbc:mysql://localhost:3306/AddressBookSystem?useSSL=false";
+		String userName = "root";
+		String password = "1234";
+		Connection con;
+		System.out.println("Connecting to database: "+jdbcURL);
+		con = DriverManager.getConnection(jdbcURL, userName, password);
+		System.out.println("Connection is successful: "+con);
+		return con;
+	}
+	
+	public List<Person> readData() throws AddressBookException {
+		String query = null;
+		query = "select * from addressbook";
+		List<Person> list = new ArrayList<>();
+		try (Connection con = this.getConnection();) {
+			Statement statement = con.createStatement();
+			ResultSet rs = statement.executeQuery(query);
+			list = this.getAddressBookDetails(rs);
+		} catch (SQLException e) {
+			throw new AddressBookException(e.getMessage(), AddressBookException.ExceptionType.DatabaseException);
+		}
+		return list;
+	}
+
+	private List<Person> getAddressBookDetails(ResultSet resultSet) throws AddressBookException {
+		try {
+			while(resultSet.next()) {
+				String firstName = resultSet.getString("FirstName");
+				String lastName = resultSet.getString("LastName");
+				String address = resultSet.getString("Address");
+				String city = resultSet.getString("City");
+				String state = resultSet.getString("State");
+				String zip = resultSet.getString("Zip");
+				String phNo = resultSet.getString("PhoneNumber");
+				String emailId = resultSet.getString("Email");
+				list.add(new Person(firstName, lastName, address, city, state, zip, phNo, emailId));
+			}
+		} catch (SQLException e) {
+			throw new AddressBookException(e.getMessage(), AddressBookException.ExceptionType.DatabaseException);
+		}
+		return null;
+	}
 }

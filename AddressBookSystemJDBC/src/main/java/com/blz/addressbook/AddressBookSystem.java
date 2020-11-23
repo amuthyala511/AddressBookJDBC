@@ -118,7 +118,7 @@ public class AddressBookSystem {
 					break;
 				}
 			case 9:
-				addressBook.addDataToFile(addressBookName);
+				addressBook.addContact(addressBookName);
 				System.out.println("Details added to text file");
 				break;
 			case 10:
