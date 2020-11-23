@@ -1,25 +1,32 @@
 package com.blz.addressbook;
 
-import java.sql.SQLException;
 import java.util.List;
-
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import com.blz.addressbook.AddressBookService.IOService;
 
 public class AddressBookSystemTest {
 	
-	private static AddressBook addressBook;
+	private static AddressBookService addressBookService;
 	
 	@BeforeClass
 	public static void createAddressBookObj() {
-		addressBook = new AddressBook();
+		addressBookService = new AddressBookService();
 		System.out.println("Welcome to the Address Book System");
 	}
 	
 	@Test
-	public void givenAddressBookDetails_WhenRetrieved_ShouldMachPersonsCount() throws AddressBookException, SQLException {
-		List<Person> list = addressBook.readData();
+	public void givenAddressBookDetails_WhenRetrieved_ShouldMachPersonsCount() throws AddressBookException {
+		List<Person> list = addressBookService.readAddressBookData(IOService.DB_IO);
 		Assert.assertEquals(2, list.size());
+	}
+	
+	@Test
+	public void givenAddressBookDetails_WhenUpdated_ShouldSyncWithDB() throws AddressBookException {
+		List<Person> data = addressBookService.readAddressBookData(IOService.DB_IO);
+		addressBookService.updateDBRecord("Sana", "Ether");
+		boolean result = addressBookService.checkUpdatedRecordSyncWithDatabase("Sana");
+		Assert.assertEquals(true, result);
 	}
 }

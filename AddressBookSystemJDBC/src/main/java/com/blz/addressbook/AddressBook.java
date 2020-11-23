@@ -301,48 +301,4 @@ public class AddressBook {
 			System.out.println("Email : " + details.emailId);
 		}
 	}
-	
-	private Connection getConnection() throws SQLException {
-		String jdbcURL = "jdbc:mysql://localhost:3306/AddressBookSystem?useSSL=false";
-		String userName = "root";
-		String password = "1234";
-		Connection con;
-		System.out.println("Connecting to database: "+jdbcURL);
-		con = DriverManager.getConnection(jdbcURL, userName, password);
-		System.out.println("Connection is successful: "+con);
-		return con;
-	}
-	
-	public List<Person> readData() throws AddressBookException {
-		String query = null;
-		query = "select * from addressbook";
-		List<Person> list = new ArrayList<>();
-		try (Connection con = this.getConnection();) {
-			Statement statement = con.createStatement();
-			ResultSet rs = statement.executeQuery(query);
-			list = this.getAddressBookDetails(rs);
-		} catch (SQLException e) {
-			throw new AddressBookException(e.getMessage(), AddressBookException.ExceptionType.DatabaseException);
-		}
-		return list;
-	}
-
-	private List<Person> getAddressBookDetails(ResultSet resultSet) throws AddressBookException {
-		try {
-			while(resultSet.next()) {
-				String firstName = resultSet.getString("FirstName");
-				String lastName = resultSet.getString("LastName");
-				String address = resultSet.getString("Address");
-				String city = resultSet.getString("City");
-				String state = resultSet.getString("State");
-				String zip = resultSet.getString("Zip");
-				String phNo = resultSet.getString("PhoneNumber");
-				String emailId = resultSet.getString("Email");
-				list.add(new Person(firstName, lastName, address, city, state, zip, phNo, emailId));
-			}
-		} catch (SQLException e) {
-			throw new AddressBookException(e.getMessage(), AddressBookException.ExceptionType.DatabaseException);
-		}
-		return null;
-	}
 }
